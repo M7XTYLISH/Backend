@@ -1,26 +1,23 @@
 import express from "express";
-import createHttpError from "http-errors";
 import globalErrorHandler from "./middlewares/globalErrorHandler.js";
 import cors from "cors";
 import userRouter from "./user/userRouter.js";
 
 const app = express();
 
+// Enable CORS for requests originating from "localhost:5513"
 app.use(cors({ origin: "localhost:5513" }));
+
+// Parse incoming requests with URL-encoded payloads
 app.use(express.urlencoded({ extended: false }));
+
+// Parse incoming requests with JSON payloads
 app.use(express.json());
 
-// app.get("/", (req, res, next) => {
-//   // const error = createHttpError(400, "something went wrong");
-//   // throw error;
-//   // res.json("Welcome to elib project");
-//   return next(createHttpError(400, "something went wrong"));
-// });
-
+// Mount the userRouter middleware at the "/api/users" path
 app.use("/api/users", userRouter);
 
-
-
+// Global error handling middleware
 app.use(globalErrorHandler);
 
 export default app;
