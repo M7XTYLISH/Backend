@@ -14,27 +14,46 @@ const createUser = async (req, res, next) => {
     return next(error);
   }
 
-  const user = await userModel.findOne({ email });
+  try {
+    const user = await userModel.findOne({ email });
 
-  if (user) {
-    const error = createHttpError(400, "User already exists with this email.");
+    if (user) {
+      const error = createHttpError(
+        400,
+        "User already exists with this email."
+      );
+      return next(error);
+    }
+  } catch (err) {
+    const error = createHttpError(400, "Error while getting user.");
     return next(error);
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
+  let newUser;
 
-  const newUser = await userModel.create({
-    name,
-    email,
-    password: hashedPassword,
-  });
+  try {
+    newUser = await userModel.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
+  } catch (err) {
+    const error = createHttpError(500, "Error while creating user.");
+    return next(error);
+  }
 
-  const token = sign({ sub: newUser._id }, config.jwtSecret, {
-    expiresIn: "7d",
-    algorithm: "HS256"
-  });
+  try {
+    const token = sign({ sub: newUser._id }, config.jwtSecret, {
+      expiresIn: "7d",
+      algorithm: "HS256",
+    });
 
-  res.json({ accessToken: token });
+    res.json({ accessToken: token });
+  } catch (err) {
+    const error = createHttpError(500, "Error while signing the jwt token.");
+    return next(error);
+  }
 };
 
 export { createUser };
