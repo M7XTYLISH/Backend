@@ -1,6 +1,6 @@
 import createHttpError from "http-errors";
-import userModel from "./userModel";
-
+import userModel from "./userModel.js";
+import bcrypt from "bcrypt";
 
 const createUser = async (req, res, next) => {
     const { name, email, password } = req.body;
@@ -17,7 +17,7 @@ const createUser = async (req, res, next) => {
         return next(error);
     }
 
-    
+    const hashedPassword = bcrypt.hash(password, 10);
 
     res.json({ message: "User Created"});
 };
