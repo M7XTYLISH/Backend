@@ -3,6 +3,7 @@ import cloudinary from "../config/cloudinary.js";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import bookModel from "./bookModel.js";
+import createHttpError from "http-errors";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,7 +51,7 @@ const createBook = async (req, res, next) => {
 
       bookUploadResult = await cloudinary.uploader.upload(bookFilePath, {
         resource_type: "raw",
-        filename_override: coverImageFileName,
+        filename_override: bookFileName,
         folder: "book-pdfs",
         format: "pdf",
       });
@@ -62,7 +63,7 @@ const createBook = async (req, res, next) => {
     const newBook = await bookModel.create({
       title,
       genre,
-      author: "662037ebf56885f34afafa4b",
+      author: req.userId,
       coverImage: coverImageUploadResult.secure_url,
       file: bookUploadResult.secure_url,
     });
@@ -71,13 +72,13 @@ const createBook = async (req, res, next) => {
       await fs.promises.unlink(coverImageFilePath);
       await fs.promises.unlink(bookFilePath);
     } catch (err) {
-      const error = createHttpError(500, "Error while deleting image or file.");
+      const error = createHttpErrorError(500, "Error while deleting image or file.");
       return next(error);
     }
 
     res.status(201).json({ _id: newBook._id });
   } catch (err) {
-    const error = createHttpError(500, "Error while creating book.");
+    const error = createHttpError(500, "Error while creating a book.");
     return next(error);
   }
 };
