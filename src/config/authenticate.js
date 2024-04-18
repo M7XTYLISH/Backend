@@ -14,9 +14,8 @@ const authenticate = (req, res, next) => {
 
     try {
         const parsedToken = token.split(" ")[1];
-
         const tokenDecoded = verify(parsedToken, config.jwtSecret);
-        
+
         req.userId = tokenDecoded.sub;
     } catch (err) {
         const error = createHttpError(401, "Token Expired.");
