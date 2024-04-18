@@ -2,6 +2,7 @@ import express from "express";
 import globalErrorHandler from "./middlewares/globalErrorHandler.js";
 import cors from "cors";
 import userRouter from "./user/userRouter.js";
+import bookRouter from "./book/bookRouter.js";
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 
 // Mount the userRouter middleware at the "/api/users" path
 app.use("/api/users", userRouter);
+app.use("/api/books", bookRouter);
 
 // Global error handling middleware
 app.use(globalErrorHandler);
