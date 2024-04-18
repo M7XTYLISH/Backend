@@ -1,6 +1,6 @@
 import path from "node:path";
 import express from "express";
-import { createBook, listBooks, updateBook } from "./bookController.js";
+import { createBook, getSingleBook, listBooks, updateBook } from "./bookController.js";
 import multer from "multer";
 import { fileURLToPath } from "node:url";
 import authenticate from "../config/authenticate.js";
@@ -49,6 +49,7 @@ bookRouter.patch(
 );
 
 bookRouter.get("/", listBooks);
+bookRouter.get("/:bookId", getSingleBook);
 
 // Export the bookRouter
 export default bookRouter;

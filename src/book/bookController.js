@@ -211,11 +211,28 @@ const listBooks = async (req, res, next) => {
   try {
     const books = await bookModel.find();
 
-    res.json(books);
+    return res.json(books);
   } catch (err) {
     const error = createHttpError(500, "Error while getting a books");
     return next(error);
   }
 };
 
-export { createBook, updateBook, listBooks };
+const getSingleBook = async (req, res, next) => {
+  const bookId = req.params.bookId;
+  try {
+    const book = await bookModel.findOne({ _id: bookId });
+
+    if (!book) {
+      const error = createHttpError(404, "Book not found.");
+      return next(error);
+    }
+
+    return res.json(book);
+  } catch (err) {
+    const error = createHttpError(500, "Error while getting a book");
+    return next(error);
+  }
+};
+
+export { createBook, updateBook, listBooks, getSingleBook };
