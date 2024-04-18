@@ -4,25 +4,32 @@ import pkg from "jsonwebtoken";
 
 const { verify } = pkg;
 
+// Middleware function for authentication
 const authenticate = (req, res, next) => {
-    const token = req.header("Authorization");
+  // Extracting token from request header
+  const token = req.header("Authorization");
 
-    if(!token) {
-        const error = createHttpError(401, "Authorization token is required");
-        return next(error);
-    }
+  // If token is not provided, return an error
+  if (!token) {
+    const error = createHttpError(401, "Authorization token is required");
+    return next(error);
+  }
 
-    try {
-        const parsedToken = token.split(" ")[1];
-        const tokenDecoded = verify(parsedToken, config.jwtSecret);
+  try {
+    // Parsing the token
+    const parsedToken = token.split(" ")[1];
+    // Verifying and decoding the token
+    const tokenDecoded = verify(parsedToken, config.jwtSecret);
 
-        req.userId = tokenDecoded.sub;
-    } catch (err) {
-        const error = createHttpError(401, "Token Expired.");
-        return next(error);
-    }
+    req.userId = tokenDecoded.sub; // Assigning the user ID from the decoded token to the request object
+  } catch (err) {
+    // If token is expired or invalid, return an error
+    const error = createHttpError(401, "Token Expired.");
+    return next(error);
+  }
 
-    next();
-}
+  // If authentication is successful, proceed to the next middleware
+  next();
+};
 
 export default authenticate;
