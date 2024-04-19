@@ -8,9 +8,10 @@ import createHttpError from "http-errors";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Function to create a new book
+// --------------------- Create Book ------------------------
 const createBook = async (req, res, next) => {
   try {
+    // Extract title and genre from request body
     const { title, genre } = req.body;
 
     let coverImageUploadResult;
@@ -39,7 +40,7 @@ const createBook = async (req, res, next) => {
         }
       );
     } catch (err) {
-      const error = createHttpError(500, "Error while uploading image.");
+      const error = createHttpError(500, "Error while uploading cover image.");
       return next(error);
     }
 
@@ -59,7 +60,7 @@ const createBook = async (req, res, next) => {
         format: "pdf",
       });
     } catch (err) {
-      const error = createHttpError(500, "Error while uploading file.");
+      const error = createHttpError(500, "Error while uploading book file.");
       return next(error);
     }
 
@@ -77,9 +78,9 @@ const createBook = async (req, res, next) => {
       await fs.promises.unlink(coverImageFilePath);
       await fs.promises.unlink(bookFilePath);
     } catch (err) {
-      const error = createHttpErrorError(
+      const error = createHttpError(
         500,
-        "Error while deleting image or file."
+        "Error while deleting temporary files."
       );
       return next(error);
     }
@@ -93,7 +94,7 @@ const createBook = async (req, res, next) => {
   }
 };
 
-// Function to update an existing book
+// --------------------- Update Book ------------------------
 const updateBook = async (req, res, next) => {
   try {
     const { title, genre } = req.body;
@@ -117,7 +118,6 @@ const updateBook = async (req, res, next) => {
       return next(error);
     }
 
-    // Initialize variables for cover image and file upload
     let completeCoverImage = book.coverImage;
     let completeFileName = book.file;
 
@@ -135,7 +135,6 @@ const updateBook = async (req, res, next) => {
           .split("/")
           .pop();
 
-        // Upload cover image to Cloudinary
         const coverImageUploadResult = await cloudinary.uploader.upload(
           coverImageFilePath,
           {
@@ -145,10 +144,8 @@ const updateBook = async (req, res, next) => {
           }
         );
 
-        // Update complete cover image URL
         completeCoverImage = coverImageUploadResult.secure_url;
 
-        // Delete the temporary cover image file
         await fs.promises.unlink(coverImageFilePath);
       } catch (err) {
         const error = createHttpError(
@@ -169,7 +166,6 @@ const updateBook = async (req, res, next) => {
           bookFileName
         );
 
-        // Upload book file to Cloudinary
         const bookUploadResult = await cloudinary.uploader.upload(
           bookFilePath,
           {
@@ -180,10 +176,8 @@ const updateBook = async (req, res, next) => {
           }
         );
 
-        // Update complete file URL
         completeFileName = bookUploadResult.secure_url;
 
-        // Delete the temporary book file
         await fs.promises.unlink(bookFilePath);
       } catch (err) {
         const error = createHttpError(500, "Error while uploading book file.");
@@ -191,33 +185,31 @@ const updateBook = async (req, res, next) => {
       }
     }
 
-    // Update the book with new details
     const updatedBook = await bookModel.findOneAndUpdate(
       { _id: bookId },
       { title, genre, coverImage: completeCoverImage, file: completeFileName },
       { new: true }
     );
 
-    // Send the updated book as response
     res.json(updatedBook);
   } catch (err) {
-    // Handle any unexpected errors
     const error = createHttpError(500, "Error while updating the book.");
     return next(error);
   }
 };
 
+// --------------------- List Book ------------------------
 const listBooks = async (req, res, next) => {
   try {
     const books = await bookModel.find();
-
     return res.json(books);
   } catch (err) {
-    const error = createHttpError(500, "Error while getting a books");
+    const error = createHttpError(500, "Error while retrieving books.");
     return next(error);
   }
 };
 
+// --------------------- Get Single Book ------------------------
 const getSingleBook = async (req, res, next) => {
   const bookId = req.params.bookId;
   try {
@@ -230,11 +222,12 @@ const getSingleBook = async (req, res, next) => {
 
     return res.json(book);
   } catch (err) {
-    const error = createHttpError(500, "Error while getting a book");
+    const error = createHttpError(500, "Error while retrieving the book.");
     return next(error);
   }
 };
 
+// --------------------- Delete Book ------------------------
 const deleteBook = async (req, res, next) => {
   const bookId = req.params.bookId;
   try {
@@ -261,16 +254,21 @@ const deleteBook = async (req, res, next) => {
     const bookFilePublicId =
       bookFileSplits.at(-2) + "/" + bookFileSplits.at(-1);
 
-    await cloudinary.uploader.destroy(coverImagePublicId);
-    await cloudinary.uploader.destroy(bookFilePublicId, {
-      resource_type: "raw",
-    });
+    try {
+      await cloudinary.uploader.destroy(coverImagePublicId);
+      await cloudinary.uploader.destroy(bookFilePublicId, {
+        resource_type: "raw",
+      });
+    } catch (err) {
+      const error = createHttpError(500, "Error while deleting image and pdf.");
+      return next(error);
+    }
 
     await bookModel.deleteOne({ _id: bookId });
 
     res.sendStatus(204);
   } catch (err) {
-    const error = createHttpError(500, "Error while getting a book");
+    const error = createHttpError(500, "Error while deleting the book.");
     return next(error);
   }
 };
