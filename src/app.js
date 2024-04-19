@@ -6,7 +6,7 @@ import bookRouter from "./book/bookRouter.js";
 
 const app = express();
 
-// Enable CORS for requests originating from "localhost:5513"
+// Enkable CORS for requests originating from "localhost:5513"
 app.use(cors({ origin: "localhost:5513" }));
 
 // Parse incoming requests with URL-encoded payloads
