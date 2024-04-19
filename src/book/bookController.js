@@ -245,13 +245,13 @@ const deleteBook = async (req, res, next) => {
       return next(error);
     }
 
-    // if (book.author.toString() !== req.userId) {
-    //   const error = createHttpError(
-    //     403,
-    //     "You cannot delete another user's book."
-    //   );
-    //   return next(error);
-    // }
+    if (book.author.toString() !== req.userId) {
+      const error = createHttpError(
+        403,
+        "You cannot delete another user's book."
+      );
+      return next(error);
+    }
 
     const coverFileSplits = book.coverImage.split("/");
     const coverImagePublicId =
